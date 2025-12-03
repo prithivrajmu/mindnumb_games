@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Layout from './components/Layout';
-import { GAMES } from './games/registry';
+import { getAllGames } from './games/registry';
 
 function App() {
-  // Default to Sudoku or the first available game
-  const [activeGameId, setActiveGameId] = useState(GAMES.sudoku.id);
+  const games = getAllGames();
+  // Default to the first available game
+  const [activeGameId, setActiveGameId] = useState(games[0]?.id || 'sudoku');
 
   return (
     <Layout

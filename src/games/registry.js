@@ -1,16 +1,24 @@
+// Game Registry - Add new games here
 import SudokuGame from './sudoku/SudokuGame';
+import GravityGame from './gravity/GravityGame';
 
-export const GAMES = {
-    sudoku: {
+const GAMES = [
+    {
         id: 'sudoku',
         name: 'Mini Sudoku',
-        description: 'A 6x6 Sudoku puzzle. Perfect for a quick mental workout.',
-        component: SudokuGame,
-        icon: '🧩' // Placeholder icon
+        icon: '🧩',
+        description: 'Classic 6x6 Sudoku puzzle',
+        component: SudokuGame
     },
-    // Future games can be added here
-    // zipline: { ... }
-};
+    {
+        id: 'gravity',
+        name: 'Gravity Drop',
+        icon: '🎯',
+        description: 'Physics-based puzzle game',
+        component: GravityGame
+    }
+];
 
-export const getGame = (id) => GAMES[id];
-export const getAllGames = () => Object.values(GAMES);
+export const getGame = (id) => GAMES.find(g => g.id === id);
+export const getAllGames = () => GAMES;
+export { GAMES };
