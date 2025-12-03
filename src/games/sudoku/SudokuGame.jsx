@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { generateGame, checkSolution, DIFFICULTY, getDailySeed } from './sudokuLogic';
+import confetti from 'canvas-confetti';
+import { generateGame, checkSolution, DIFFICULTY, getHint } from './sudokuLogic';
 import { storage } from '../../services/storage';
 import Leaderboard from '../../components/Leaderboard';
 
@@ -13,6 +14,7 @@ const SudokuGame = () => {
     const [isActive, setIsActive] = useState(false);
     const [mistakes, setMistakes] = useState(0);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
+    const [history, setHistory] = useState([]); // Array of grid states
 
     // Initialize Game
     const startNewGame = useCallback((diff = difficulty) => {
@@ -24,6 +26,7 @@ const SudokuGame = () => {
         setIsActive(true);
         setMistakes(0);
         setSelectedCell(null);
+        setHistory([]);
     }, [difficulty]);
 
     // Initial Load
@@ -55,15 +58,13 @@ const SudokuGame = () => {
         if (!selectedCell || isComplete) return;
         const [r, c] = selectedCell;
 
+        // Save to history before modifying
+        setHistory(prev => [...prev, grid.map(row => [...row])]);
+
         // Update Grid
         const newGrid = grid.map(row => [...row]);
         newGrid[r][c] = num;
         setGrid(newGrid);
-
-        // Check correctness immediately (optional, or wait for full board)
-        // Here we just check if it matches solution for immediate feedback if desired,
-        // but standard Sudoku usually waits or highlights conflicts.
-        // For this version, we'll just update state.
 
         // Check if board is full
         let isFull = true;
@@ -80,7 +81,6 @@ const SudokuGame = () => {
             if (checkSolution(newGrid, gameData.solution)) {
                 handleWin();
             } else {
-                // Optional: Visual feedback for wrong solution
                 setMistakes(m => m + 1);
             }
         }
@@ -90,6 +90,13 @@ const SudokuGame = () => {
         setIsComplete(true);
         setIsActive(false);
 
+        // Celebration
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
+
         // Save Score
         const score = Math.max(0, 1000 - (timer * 2) - (mistakes * 50) + (difficulty === DIFFICULTY.HARD ? 500 : difficulty === DIFFICULTY.MEDIUM ? 200 : 0));
         await storage.saveScore('sudoku', {
@@ -98,6 +105,46 @@ const SudokuGame = () => {
             difficulty: difficulty === DIFFICULTY.EASY ? 'Easy' : difficulty === DIFFICULTY.MEDIUM ? 'Medium' : 'Hard',
             time: timer
         });
+    };
+
+    // Undo
+    const handleUndo = () => {
+        if (history.length === 0 || isComplete) return;
+        const previousGrid = history[history.length - 1];
+        setGrid(previousGrid);
+        setHistory(prev => prev.slice(0, -1));
+    };
+
+    // Reset
+    const handleReset = () => {
+        if (isComplete) return;
+        if (window.confirm('Are you sure you want to reset the board?')) {
+            setGrid(gameData.initial.map(row => [...row]));
+            setHistory([]);
+            setMistakes(0);
+            setTimer(0); // Optional: reset timer or keep it running? Usually reset for full restart.
+        }
+    };
+
+    // Hint
+    const handleHint = () => {
+        if (isComplete) return;
+        const hint = getHint(grid, gameData.solution);
+        if (hint) {
+            // Save history
+            setHistory(prev => [...prev, grid.map(row => [...row])]);
+
+            // Apply hint
+            const newGrid = grid.map(row => [...row]);
+            newGrid[hint.row][hint.col] = hint.value;
+            setGrid(newGrid);
+
+            // Highlight/Select the hinted cell
+            setSelectedCell([hint.row, hint.col]);
+
+            // Penalty for using hint? (Optional, maybe reduce score)
+            setTimer(t => t + 10); // Add 10 seconds penalty
+        }
     };
 
     // Keyboard Support
@@ -110,14 +157,14 @@ const SudokuGame = () => {
                 handleNumberInput(num);
             } else if (e.key === 'Backspace' || e.key === 'Delete') {
                 handleNumberInput(0);
-            } else if (e.key.startsWith('Arrow')) {
-                // Navigation logic could go here
+            } else if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+                handleUndo();
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [selectedCell, grid, isComplete]); // Re-bind when dependencies change
+    }, [selectedCell, grid, isComplete, history]);
 
     // Format Time
     const formatTime = (seconds) => {
@@ -173,7 +220,20 @@ const SudokuGame = () => {
                 ))}
             </div>
 
-            {/* Controls */}
+            {/* Game Controls (Undo, Reset, Hint) */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                <button className="btn-secondary" onClick={handleUndo} disabled={history.length === 0 || isComplete} title="Undo">
+                    ↩ Undo
+                </button>
+                <button className="btn-secondary" onClick={handleHint} disabled={isComplete} title="Get a Hint (+10s penalty)">
+                    💡 Hint
+                </button>
+                <button className="btn-secondary" onClick={handleReset} disabled={isComplete} title="Reset Board">
+                    🔄 Reset
+                </button>
+            </div>
+
+            {/* Number Pad */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.5rem', marginBottom: '2rem' }}>
                 {[1, 2, 3, 4, 5, 6].map(num => (
                     <button

@@ -122,3 +122,44 @@ export const getDailySeed = () => {
     const now = new Date();
     return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 };
+
+// Get Hint
+export const getHint = (currentGrid, solutionGrid) => {
+    // 1. Check for mistakes (filled cells that don't match solution)
+    for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+            if (currentGrid[r][c] !== EMPTY && currentGrid[r][c] !== solutionGrid[r][c]) {
+                return {
+                    type: 'correction',
+                    row: r,
+                    col: c,
+                    value: solutionGrid[r][c],
+                    message: 'Correction: This cell has the wrong number.'
+                };
+            }
+        }
+    }
+
+    // 2. If no mistakes, reveal a random empty cell
+    const emptyCells = [];
+    for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+            if (currentGrid[r][c] === EMPTY) {
+                emptyCells.push({ r, c });
+            }
+        }
+    }
+
+    if (emptyCells.length > 0) {
+        const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        return {
+            type: 'reveal',
+            row: randomCell.r,
+            col: randomCell.c,
+            value: solutionGrid[randomCell.r][randomCell.c],
+            message: 'Hint: Here is a number for you.'
+        };
+    }
+
+    return null; // Board is full/correct
+};
