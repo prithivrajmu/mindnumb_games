@@ -24,7 +24,8 @@ const Leaderboard = ({ gameId, onClose }) => {
             maxWidth: '500px',
             padding: '2rem',
             zIndex: 100,
-            background: 'rgba(15, 23, 42, 0.95)'
+            background: 'var(--glass-bg)',
+            border: '1px solid var(--glass-border)'
         }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>Top 10 Leaderboard</h2>
@@ -37,13 +38,13 @@ const Leaderboard = ({ gameId, onClose }) => {
             </div>
 
             {loading ? (
-                <p>Loading...</p>
+                <p style={{ color: 'var(--text-primary)' }}>Loading...</p>
             ) : scores.length === 0 ? (
                 <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>No scores yet. Be the first!</p>
             ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
-                        <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
+                        <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>
                             <th style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>Rank</th>
                             <th style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>Score</th>
                             <th style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>Difficulty</th>
@@ -52,12 +53,12 @@ const Leaderboard = ({ gameId, onClose }) => {
                     </thead>
                     <tbody>
                         {scores.map((entry, index) => (
-                            <tr key={index} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                <td style={{ padding: '0.75rem 0.5rem', fontWeight: index < 3 ? 'bold' : 'normal', color: index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? '#cd7f32' : 'inherit' }}>
+                            <tr key={index} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                <td style={{ padding: '0.75rem 0.5rem', fontWeight: index < 3 ? 'bold' : 'normal', color: index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? '#cd7f32' : 'var(--text-primary)' }}>
                                     #{index + 1}
                                 </td>
-                                <td style={{ padding: '0.75rem 0.5rem', fontWeight: 'bold' }}>{entry.score}</td>
-                                <td style={{ padding: '0.75rem 0.5rem' }}>{entry.difficulty}</td>
+                                <td style={{ padding: '0.75rem 0.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>{entry.score}</td>
+                                <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-primary)' }}>{entry.difficulty}</td>
                                 <td style={{ padding: '0.75rem 0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                                     {new Date(entry.date).toLocaleDateString()}
                                 </td>

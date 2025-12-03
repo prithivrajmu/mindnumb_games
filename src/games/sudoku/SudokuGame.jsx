@@ -193,8 +193,8 @@ const SudokuGame = () => {
                         const isSelected = selectedCell && selectedCell[0] === rIndex && selectedCell[1] === cIndex;
 
                         // Border logic for 2x3 boxes
-                        const borderRight = (cIndex + 1) % 3 === 0 && cIndex !== 5 ? '2px solid rgba(255,255,255,0.2)' : 'none';
-                        const borderBottom = (rIndex + 1) % 2 === 0 && rIndex !== 5 ? '2px solid rgba(255,255,255,0.2)' : 'none';
+                        const borderRight = (cIndex + 1) % 3 === 0 && cIndex !== 5 ? '2px solid var(--grid-line)' : 'none';
+                        const borderBottom = (rIndex + 1) % 2 === 0 && rIndex !== 5 ? '2px solid var(--grid-line)' : 'none';
 
                         return (
                             <div
@@ -202,7 +202,7 @@ const SudokuGame = () => {
                                 onClick={() => handleCellClick(rIndex, cIndex)}
                                 className="flex-center"
                                 style={{
-                                    background: isSelected ? 'rgba(56, 189, 248, 0.2)' : isInitial ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.2)',
+                                    background: isSelected ? 'var(--cell-bg-selected)' : isInitial ? 'var(--cell-bg-initial)' : 'transparent',
                                     color: isInitial ? 'var(--text-secondary)' : 'var(--accent-primary)',
                                     fontSize: '1.5rem',
                                     fontWeight: isInitial ? 'normal' : 'bold',
@@ -210,7 +210,8 @@ const SudokuGame = () => {
                                     borderRadius: '4px',
                                     borderRight,
                                     borderBottom,
-                                    transition: 'background 0.2s'
+                                    transition: 'background 0.2s',
+                                    border: isSelected ? '1px solid var(--accent-primary)' : '1px solid transparent' // Explicit border for selection
                                 }}
                             >
                                 {cell !== 0 ? cell : ''}
@@ -260,9 +261,9 @@ const SudokuGame = () => {
 
             {/* Win State / Next Level */}
             {isComplete && (
-                <div className="glass-panel animate-fade-in" style={{ padding: '2rem', textAlign: 'center', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%', maxWidth: '400px', zIndex: 10 }}>
+                <div className="glass-panel animate-fade-in" style={{ padding: '2rem', textAlign: 'center', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '80%', maxWidth: '400px', zIndex: 10, background: 'var(--glass-bg)' }}>
                     <h2 style={{ color: 'var(--success)', marginBottom: '1rem' }}>Level Complete!</h2>
-                    <p style={{ marginBottom: '2rem' }}>Score: {Math.max(0, 1000 - (timer * 2) - (mistakes * 50) + (difficulty === DIFFICULTY.HARD ? 500 : difficulty === DIFFICULTY.MEDIUM ? 200 : 0))}</p>
+                    <p style={{ marginBottom: '2rem', color: 'var(--text-primary)' }}>Score: {Math.max(0, 1000 - (timer * 2) - (mistakes * 50) + (difficulty === DIFFICULTY.HARD ? 500 : difficulty === DIFFICULTY.MEDIUM ? 200 : 0))}</p>
 
                     <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                         <button
