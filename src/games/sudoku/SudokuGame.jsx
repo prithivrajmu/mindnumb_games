@@ -342,16 +342,12 @@ const SudokuGame = () => {
 
                             // Strong lifted shadow for block boundaries
                             let boxShadow = 'none';
-                            if (isRightBlockBorder || isBottomBlockBorder) {
-                                boxShadow = `
-                0 4px 8px rgba(0,0,0,0.3),
-                inset 0 1px 0 rgba(255,255,255,0.1)
-              `;
-                            }
+                            let zIndex = 1;
 
-                            // Add margin/spacing effect for better block separation
-                            const marginRight = isRightBlockBorder ? '4px' : '0';
-                            const marginBottom = isBottomBlockBorder ? '4px' : '0';
+                            if (isRightBlockBorder || isBottomBlockBorder) {
+                                boxShadow = `0 0 0 2px var(--bg-primary), 0 4px 8px rgba(0,0,0,0.5)`;
+                                zIndex = 2;
+                            }
 
                             return (
                                 <div
@@ -368,8 +364,7 @@ const SudokuGame = () => {
                                         borderRight,
                                         borderBottom,
                                         boxShadow,
-                                        marginRight,
-                                        marginBottom,
+                                        zIndex,
                                         transition: 'all 0.2s ease',
                                         border: isSelected ? '3px solid var(--accent-primary)' : '1px solid transparent',
                                         minHeight: isMobile ? '44px' : 'auto',

@@ -349,7 +349,8 @@ const GravityGame = () => {
                         borderRadius: '8px',
                         cursor: dropsUsed < levelData.par && !isWon ? 'crosshair' : 'default',
                         maxWidth: '100%',
-                        height: 'auto'
+                        height: 'auto',
+                        background: 'var(--bg-primary)'
                     }}
                 />
             </div>
