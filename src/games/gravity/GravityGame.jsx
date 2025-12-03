@@ -96,9 +96,13 @@ const GravityGame = () => {
         const ctx = canvas.getContext('2d');
         const engine = engineRef.current;
 
+        // Get computed background color from document
+        const bgColor = getComputedStyle(document.documentElement)
+            .getPropertyValue('--bg-primary').trim() || '#0f172a';
+
         const render = () => {
-            // Clear canvas
-            ctx.fillStyle = 'var(--bg-primary)';
+            // Clear canvas with actual color
+            ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
             // Draw all bodies
@@ -110,8 +114,11 @@ const GravityGame = () => {
                 // Get color from body render property
                 ctx.fillStyle = body.render.fillStyle;
 
+                // Make goal semi-transparent
                 if (body.label === 'goal') {
                     ctx.globalAlpha = 0.3;
+                } else {
+                    ctx.globalAlpha = 1.0;
                 }
 
                 if (body.circleRadius) {
@@ -119,6 +126,11 @@ const GravityGame = () => {
                     ctx.beginPath();
                     ctx.arc(0, 0, body.circleRadius, 0, Math.PI * 2);
                     ctx.fill();
+
+                    // Add stroke for visibility
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
                 } else {
                     // Rectangle
                     const vertices = body.vertices;
@@ -129,6 +141,13 @@ const GravityGame = () => {
                     }
                     ctx.closePath();
                     ctx.fill();
+
+                    // Add stroke for visibility
+                    if (body.label !== 'goal') {
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    }
                 }
 
                 ctx.restore();
