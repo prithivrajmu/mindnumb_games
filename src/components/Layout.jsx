@@ -2,9 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { getAllGames } from '../games/registry';
 
 const THEMES = [
-    { id: 'midnight', name: '🌙 Midnight' },
-    { id: 'dawn', name: '☀️ Dawn' },
-    { id: 'paper', name: '📝 Paper' }
+    { id: 'midnight', name: '🌙 Midnight', emoji: '🌙' },
+    { id: 'dawn', name: '☀️ Dawn', emoji: '☀️' },
+    { id: 'ocean', name: '🌊 Ocean', emoji: '🌊' },
+    { id: 'sunset', name: '🌅 Sunset', emoji: '🌅' },
+    { id: 'forest', name: '🌲 Forest', emoji: '🌲' },
+    { id: 'neon', name: '⚡ Neon', emoji: '⚡' },
+    { id: 'monokai', name: '💻 Monokai', emoji: '💻' },
+    { id: 'paper', name: '📝 Paper', emoji: '📝' }
 ];
 
 const Layout = ({ activeGameId, onGameSelect }) => {
@@ -94,23 +99,23 @@ const Layout = ({ activeGameId, onGameSelect }) => {
                 {/* Theme Switcher */}
                 <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
                     <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>THEME</p>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
                         {THEMES.map(theme => (
                             <button
                                 key={theme.id}
                                 onClick={() => setCurrentTheme(theme.id)}
                                 title={theme.name}
                                 style={{
-                                    flex: 1,
+                                    minWidth: '44px',
                                     padding: '0.5rem',
                                     borderRadius: '0.375rem',
-                                    border: currentTheme === theme.id ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                                    border: currentTheme === theme.id ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
                                     background: currentTheme === theme.id ? 'var(--cell-bg-selected)' : 'transparent',
                                     cursor: 'pointer',
                                     fontSize: '1.2rem'
                                 }}
                             >
-                                {theme.name.split(' ')[0]}
+                                {theme.emoji}
                             </button>
                         ))}
                     </div>
@@ -133,7 +138,7 @@ const Layout = ({ activeGameId, onGameSelect }) => {
                             Drift
                         </h1>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.25rem', overflowX: 'auto', maxWidth: '200px' }}>
                         {THEMES.map(theme => (
                             <button
                                 key={theme.id}
@@ -142,15 +147,16 @@ const Layout = ({ activeGameId, onGameSelect }) => {
                                 style={{
                                     padding: '0.5rem',
                                     borderRadius: '0.375rem',
-                                    border: currentTheme === theme.id ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                                    border: currentTheme === theme.id ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
                                     background: currentTheme === theme.id ? 'var(--cell-bg-selected)' : 'transparent',
                                     cursor: 'pointer',
                                     fontSize: '1rem',
                                     minWidth: '44px',
-                                    minHeight: '44px'
+                                    minHeight: '44px',
+                                    flexShrink: 0
                                 }}
                             >
-                                {theme.name.split(' ')[0]}
+                                {theme.emoji}
                             </button>
                         ))}
                     </div>

@@ -46,9 +46,9 @@ const Leaderboard = ({ gameId, onClose }) => {
                     <thead>
                         <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>
                             <th style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>Rank</th>
+                            <th style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>Player</th>
                             <th style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>Score</th>
-                            <th style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>Difficulty</th>
-                            <th style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>Date</th>
+                            <th style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>Diff</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -57,11 +57,9 @@ const Leaderboard = ({ gameId, onClose }) => {
                                 <td style={{ padding: '0.75rem 0.5rem', fontWeight: index < 3 ? 'bold' : 'normal', color: index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? '#cd7f32' : 'var(--text-primary)' }}>
                                     #{index + 1}
                                 </td>
-                                <td style={{ padding: '0.75rem 0.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>{entry.score}</td>
-                                <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-primary)' }}>{entry.difficulty}</td>
-                                <td style={{ padding: '0.75rem 0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                                    {new Date(entry.date).toLocaleDateString()}
-                                </td>
+                                <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-primary)', fontWeight: '500' }}>{entry.name || 'Anonymous'}</td>
+                                <td style={{ padding: '0.75rem 0.5rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>{entry.score}</td>
+                                <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{entry.difficulty}</td>
                             </tr>
                         ))}
                     </tbody>
