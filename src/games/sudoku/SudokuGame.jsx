@@ -19,6 +19,7 @@ const SudokuGame = () => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [hintsUsed, setHintsUsed] = useState(0);
     const MAX_HINTS = 3;
+    const [hasStarted, setHasStarted] = useState(false);
 
     useEffect(() => {
         const handleResize = () => {
@@ -41,22 +42,23 @@ const SudokuGame = () => {
         setHistory([]);
         setShowNumberPad(false);
         setHintsUsed(0);
+        setHasStarted(false);
     }, [difficulty]);
 
     useEffect(() => {
         startNewGame();
     }, []);
 
-    // Timer
+    // Timer - only starts after game begins
     useEffect(() => {
         let interval = null;
-        if (isActive && !isComplete) {
+        if (isActive && !isComplete && hasStarted) {
             interval = setInterval(() => {
                 setTimer(t => t + 1);
             }, 1000);
         }
         return () => clearInterval(interval);
-    }, [isActive, isComplete]);
+    }, [isActive, isComplete, hasStarted]);
 
     // Handle Cell Click
     const handleCellClick = (row, col) => {
@@ -209,6 +211,82 @@ const SudokuGame = () => {
 
     if (!gameData) return <div className="flex-center" style={{ height: '100%' }}>Loading...</div>;
 
+    // Start Screen
+    if (!hasStarted) {
+        return (
+            <div className="sudoku-container" style={{ maxWidth: isMobile ? '100%' : '600px', margin: '0 auto' }}>
+                {/* Header Info - Hidden during start */}
+                <div className="card" style={{ marginBottom: '1rem', padding: isMobile ? '1rem' : '1.5rem', opacity: 0.5 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', textAlign: 'center' }}>
+                        <div>
+                            <div style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Difficulty</div>
+                            <div style={{ fontWeight: 'bold', color: 'var(--text-primary)', fontSize: isMobile ? '0.875rem' : '1rem' }}>
+                                {difficulty === DIFFICULTY.EASY ? 'Easy' : difficulty === DIFFICULTY.MEDIUM ? 'Medium' : 'Hard'}
+                            </div>
+                        </div>
+                        <div>
+                            <div style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Time</div>
+                            <div style={{ fontWeight: 'bold', color: 'var(--text-primary)', fontFamily: 'monospace', fontSize: isMobile ? '0.875rem' : '1rem' }}>0:00</div>
+                        </div>
+                        <div>
+                            <div style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Mistakes</div>
+                            <div style={{ fontWeight: 'bold', color: 'var(--error)', fontSize: isMobile ? '0.875rem' : '1rem' }}>0</div>
+                        </div>
+                        <div>
+                            <div style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Hints</div>
+                            <div style={{ fontWeight: 'bold', color: 'var(--warning)', fontSize: isMobile ? '0.875rem' : '1rem' }}>{MAX_HINTS}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Start Button Centered on Grid Area */}
+                <div className="glass-panel" style={{
+                    padding: isMobile ? '0.5rem' : '1rem',
+                    aspectRatio: '1',
+                    marginBottom: '1rem',
+                    maxWidth: isMobile ? '100%' : '500px',
+                    margin: '0 auto',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    background: 'var(--glass-bg)',
+                    backdropFilter: 'blur(20px)'
+                }}>
+                    <div style={{ textAlign: 'center' }}>
+                        <h2 style={{ fontSize: isMobile ? '1.5rem' : '2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>
+                            Mini Sudoku
+                        </h2>
+                        <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+                            {difficulty === DIFFICULTY.EASY ? 'Easy' : difficulty === DIFFICULTY.MEDIUM ? 'Medium' : 'Hard'} Mode
+                        </p>
+                        <button
+                            className="btn-primary"
+                            onClick={() => setHasStarted(true)}
+                            style={{
+                                padding: isMobile ? '1rem 2rem' : '1.25rem 3rem',
+                                fontSize: isMobile ? '1.125rem' : '1.5rem',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            ▶ Start Game
+                        </button>
+                    </div>
+                </div>
+
+                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                    <button className="btn-secondary" onClick={() => setShowLeaderboard(true)}>
+                        🏆 View Leaderboard
+                    </button>
+                </div>
+
+                {showLeaderboard && (
+                    <Leaderboard gameId="sudoku" onClose={() => setShowLeaderboard(false)} />
+                )}
+            </div>
+        );
+    }
+
     return (
         <>
             <div className="sudoku-container" style={{ maxWidth: isMobile ? '100%' : '600px', margin: '0 auto' }}>
@@ -251,8 +329,14 @@ const SudokuGame = () => {
                             const isInitial = gameData.initial[rIndex][cIndex] !== 0;
                             const isSelected = selectedCell && selectedCell[0] === rIndex && selectedCell[1] === cIndex;
 
-                            const borderRight = (cIndex + 1) % 3 === 0 && cIndex !== 5 ? '2px solid var(--grid-line)' : 'none';
-                            const borderBottom = (rIndex + 1) % 2 === 0 && rIndex !== 5 ? '2px solid var(--grid-line)' : 'none';
+                            // Enhanced border logic for 2x3 blocks with lifted effect
+                            const borderRight = (cIndex + 1) % 3 === 0 && cIndex !== 5 ? '4px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.1)';
+                            const borderBottom = (rIndex + 1) % 2 === 0 && rIndex !== 5 ? '4px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.1)';
+
+                            // Add subtle shadow for lifted blocks
+                            const boxShadow = ((cIndex + 1) % 3 === 0 && cIndex !== 5) || ((rIndex + 1) % 2 === 0 && rIndex !== 5)
+                                ? '0 2px 4px rgba(0,0,0,0.1)'
+                                : 'none';
 
                             return (
                                 <div
@@ -268,7 +352,8 @@ const SudokuGame = () => {
                                         borderRadius: '4px',
                                         borderRight,
                                         borderBottom,
-                                        transition: 'background 0.2s',
+                                        boxShadow,
+                                        transition: 'background 0.2s, box-shadow 0.2s',
                                         border: isSelected ? '2px solid var(--accent-primary)' : '1px solid transparent',
                                         minHeight: isMobile ? '44px' : 'auto'
                                     }}
