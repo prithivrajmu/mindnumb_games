@@ -242,3 +242,12 @@ p {
         gap: 2px !important;
     }
 }
+
+/* Ensure uniform grid cell sizing */
+.sudoku-grid>div {
+    aspect-ratio: 1 !important;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

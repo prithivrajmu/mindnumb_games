@@ -98,27 +98,33 @@ const Layout = ({ activeGameId, onGameSelect }) => {
 
                 {/* Theme Switcher */}
                 <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>THEME</p>
-                    <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+                    <label htmlFor="theme-select" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'block' }}>THEME</label>
+                    <select
+                        id="theme-select"
+                        value={currentTheme}
+                        onChange={(e) => setCurrentTheme(e.target.value)}
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            borderRadius: '0.5rem',
+                            border: '1px solid var(--border-color)',
+                            background: 'var(--bg-tertiary)',
+                            color: 'var(--text-primary)',
+                            fontSize: '1rem',
+                            cursor: 'pointer',
+                            appearance: 'none',
+                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'right 0.75rem center',
+                            paddingRight: '2.5rem'
+                        }}
+                    >
                         {THEMES.map(theme => (
-                            <button
-                                key={theme.id}
-                                onClick={() => setCurrentTheme(theme.id)}
-                                title={theme.name}
-                                style={{
-                                    minWidth: '44px',
-                                    padding: '0.5rem',
-                                    borderRadius: '0.375rem',
-                                    border: currentTheme === theme.id ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                                    background: currentTheme === theme.id ? 'var(--cell-bg-selected)' : 'transparent',
-                                    cursor: 'pointer',
-                                    fontSize: '1.2rem'
-                                }}
-                            >
-                                {theme.emoji}
-                            </button>
+                            <option key={theme.id} value={theme.id}>
+                                {theme.name}
+                            </option>
                         ))}
-                    </div>
+                    </select>
                 </div>
             </aside>
 
@@ -138,28 +144,26 @@ const Layout = ({ activeGameId, onGameSelect }) => {
                             Drift
                         </h1>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.25rem', overflowX: 'auto', maxWidth: '200px' }}>
+                    <select
+                        value={currentTheme}
+                        onChange={(e) => setCurrentTheme(e.target.value)}
+                        style={{
+                            padding: '0.5rem',
+                            borderRadius: '0.375rem',
+                            border: '1px solid var(--border-color)',
+                            background: 'var(--bg-tertiary)',
+                            color: 'var(--text-primary)',
+                            fontSize: '0.875rem',
+                            cursor: 'pointer',
+                            minHeight: '44px'
+                        }}
+                    >
                         {THEMES.map(theme => (
-                            <button
-                                key={theme.id}
-                                onClick={() => setCurrentTheme(theme.id)}
-                                title={theme.name}
-                                style={{
-                                    padding: '0.5rem',
-                                    borderRadius: '0.375rem',
-                                    border: currentTheme === theme.id ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                                    background: currentTheme === theme.id ? 'var(--cell-bg-selected)' : 'transparent',
-                                    cursor: 'pointer',
-                                    fontSize: '1rem',
-                                    minWidth: '44px',
-                                    minHeight: '44px',
-                                    flexShrink: 0
-                                }}
-                            >
-                                {theme.emoji}
-                            </button>
+                            <option key={theme.id} value={theme.id}>
+                                {theme.name}
+                            </option>
                         ))}
-                    </div>
+                    </select>
                 </div>
             )}
 
