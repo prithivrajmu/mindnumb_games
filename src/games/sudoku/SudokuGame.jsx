@@ -315,10 +315,10 @@ const SudokuGame = () => {
                 </div>
                 {/* Grid */}
                 <div className="glass-panel sudoku-grid" style={{
-                    padding: isMobile ? '0.5rem' : '1rem',
+                    padding: isMobile ? '0.75rem' : '1rem',
                     display: 'grid',
                     gridTemplateColumns: 'repeat(6, 1fr)',
-                    gap: isMobile ? '2px' : '4px',
+                    gap: isMobile ? '3px' : '6px',
                     aspectRatio: '1',
                     marginBottom: '1rem',
                     maxWidth: isMobile ? '100%' : '500px',
@@ -329,14 +329,29 @@ const SudokuGame = () => {
                             const isInitial = gameData.initial[rIndex][cIndex] !== 0;
                             const isSelected = selectedCell && selectedCell[0] === rIndex && selectedCell[1] === cIndex;
 
-                            // Enhanced border logic for 2x3 blocks with lifted effect
-                            const borderRight = (cIndex + 1) % 3 === 0 && cIndex !== 5 ? '4px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.1)';
-                            const borderBottom = (rIndex + 1) % 2 === 0 && rIndex !== 5 ? '4px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.1)';
+                            // Enhanced border logic for 2x3 blocks with prominent lifted effect
+                            const isRightBlockBorder = (cIndex + 1) % 3 === 0 && cIndex !== 5;
+                            const isBottomBlockBorder = (rIndex + 1) % 2 === 0 && rIndex !== 5;
 
-                            // Add subtle shadow for lifted blocks
-                            const boxShadow = ((cIndex + 1) % 3 === 0 && cIndex !== 5) || ((rIndex + 1) % 2 === 0 && rIndex !== 5)
-                                ? '0 2px 4px rgba(0,0,0,0.1)'
-                                : 'none';
+                            const borderRight = isRightBlockBorder
+                                ? '5px solid var(--accent-primary)'
+                                : '1px solid var(--border-color)';
+                            const borderBottom = isBottomBlockBorder
+                                ? '5px solid var(--accent-primary)'
+                                : '1px solid var(--border-color)';
+
+                            // Strong lifted shadow for block boundaries
+                            let boxShadow = 'none';
+                            if (isRightBlockBorder || isBottomBlockBorder) {
+                                boxShadow = `
+                0 4px 8px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.1)
+              `;
+                            }
+
+                            // Add margin/spacing effect for better block separation
+                            const marginRight = isRightBlockBorder ? '4px' : '0';
+                            const marginBottom = isBottomBlockBorder ? '4px' : '0';
 
                             return (
                                 <div
@@ -353,9 +368,12 @@ const SudokuGame = () => {
                                         borderRight,
                                         borderBottom,
                                         boxShadow,
-                                        transition: 'background 0.2s, box-shadow 0.2s',
-                                        border: isSelected ? '2px solid var(--accent-primary)' : '1px solid transparent',
-                                        minHeight: isMobile ? '44px' : 'auto'
+                                        marginRight,
+                                        marginBottom,
+                                        transition: 'all 0.2s ease',
+                                        border: isSelected ? '3px solid var(--accent-primary)' : '1px solid transparent',
+                                        minHeight: isMobile ? '44px' : 'auto',
+                                        position: 'relative'
                                     }}
                                 >
                                     {cell !== 0 ? cell : ''}
