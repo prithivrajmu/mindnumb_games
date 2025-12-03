@@ -13,16 +13,25 @@ const Layout = ({ activeGameId, onGameSelect }) => {
     const [currentTheme, setCurrentTheme] = useState(() => {
         return localStorage.getItem('mng_theme') || 'midnight';
     });
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', currentTheme);
         localStorage.setItem('mng_theme', currentTheme);
     }, [currentTheme]);
 
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     return (
         <div className="app-container" style={{ display: 'flex', minHeight: '100vh' }}>
-            {/* Sidebar */}
-            <aside style={{
+            {/* Desktop/Tablet Sidebar */}
+            <aside className="sidebar" style={{
                 width: '280px',
                 padding: '2rem',
                 borderRight: '1px solid var(--border-color)',
@@ -30,16 +39,19 @@ const Layout = ({ activeGameId, onGameSelect }) => {
                 display: 'flex',
                 flexDirection: 'column'
             }}>
-                <h1 style={{
-                    fontSize: '1.5rem',
-                    fontWeight: 'bold',
-                    marginBottom: '2rem',
-                    background: 'linear-gradient(to right, var(--accent-primary), var(--accent-secondary))',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent'
-                }}>
-                    Mind Numb
-                </h1>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                    <img src="/logo.jpg" alt="Drift Logo" style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover' }} />
+                    <h1 style={{
+                        fontSize: '1.5rem',
+                        fontWeight: 'bold',
+                        background: 'linear-gradient(to right, var(--accent-primary), var(--accent-secondary))',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        margin: 0
+                    }}>
+                        Drift
+                    </h1>
+                </div>
 
                 <nav style={{ flex: 1 }}>
                     <h3 style={{
@@ -49,7 +61,7 @@ const Layout = ({ activeGameId, onGameSelect }) => {
                         color: 'var(--text-secondary)',
                         marginBottom: '1rem'
                     }}>
-                        Daily Games
+                        Games
                     </h3>
                     <ul style={{ listStyle: 'none' }}>
                         {games.map(game => (
@@ -105,30 +117,74 @@ const Layout = ({ activeGameId, onGameSelect }) => {
                 </div>
             </aside>
 
-            {/* Main Content */}
-            <main style={{ flex: 1, padding: '2rem', overflowY: 'auto', background: 'var(--bg-primary)' }}>
-                <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                        <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>{activeGame ? activeGame.name : 'Select a Game'}</h2>
-                        <p style={{ color: 'var(--text-secondary)' }}>{activeGame ? activeGame.description : ''}</p>
+            {/* Mobile Header */}
+            {isMobile && (
+                <div className="mobile-header">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <img src="/logo.jpg" alt="Drift Logo" style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover' }} />
+                        <h1 style={{
+                            fontSize: '1.25rem',
+                            fontWeight: 'bold',
+                            background: 'linear-gradient(to right, var(--accent-primary), var(--accent-secondary))',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            margin: 0
+                        }}>
+                            Drift
+                        </h1>
                     </div>
-                    {/* Placeholder for global stats or user profile */}
-                    <div className="glass-panel" style={{ padding: '0.5rem 1rem' }}>
-                        <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Daily Streak: </span>
-                        <span style={{ fontWeight: 'bold', color: 'var(--accent-primary)' }}>3 🔥</span>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        {THEMES.map(theme => (
+                            <button
+                                key={theme.id}
+                                onClick={() => setCurrentTheme(theme.id)}
+                                title={theme.name}
+                                style={{
+                                    padding: '0.5rem',
+                                    borderRadius: '0.375rem',
+                                    border: currentTheme === theme.id ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                                    background: currentTheme === theme.id ? 'var(--cell-bg-selected)' : 'transparent',
+                                    cursor: 'pointer',
+                                    fontSize: '1rem',
+                                    minWidth: '44px',
+                                    minHeight: '44px'
+                                }}
+                            >
+                                {theme.name.split(' ')[0]}
+                            </button>
+                        ))}
                     </div>
-                </header>
+                </div>
+            )}
 
+            {/* Main Content */}
+            <main style={{ flex: 1, padding: isMobile ? '1rem' : '2rem', overflowY: 'auto', background: 'var(--bg-primary)' }}>
                 <div className="game-container animate-fade-in">
                     {activeGame ? (
                         <activeGame.component />
                     ) : (
-                        <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center' }}>
-                            <p style={{ color: 'var(--text-primary)' }}>Select a game from the sidebar to start playing.</p>
+                        <div className="glass-panel" style={{ padding: '4rem 2rem', textAlign: 'center' }}>
+                            <p style={{ color: 'var(--text-primary)' }}>Select a game to start playing</p>
                         </div>
                     )}
                 </div>
             </main>
+
+            {/* Mobile Bottom Navigation */}
+            {isMobile && (
+                <nav className="mobile-bottom-nav">
+                    {games.map(game => (
+                        <button
+                            key={game.id}
+                            onClick={() => onGameSelect(game.id)}
+                            className={activeGameId === game.id ? 'active' : ''}
+                        >
+                            <span className="icon">{game.icon}</span>
+                            <span>{game.name}</span>
+                        </button>
+                    ))}
+                </nav>
+            )}
         </div>
     );
 };
