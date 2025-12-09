@@ -322,32 +322,62 @@ const SudokuGame = () => {
                     aspectRatio: '1',
                     marginBottom: '1rem',
                     maxWidth: isMobile ? '100%' : '500px',
-                    margin: '0 auto 1rem'
+                    margin: '0 auto 1rem',
+                    position: 'relative' // Needed for absolute overlay
                 }}>
+                    {/* Overlay for 2x3 Block Borders */}
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        pointerEvents: 'none',
+                        zIndex: 20,
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr', // 2 columns of 3x2 blocks
+                        gridTemplateRows: '1fr 1fr 1fr', // 3 rows of 2x3 blocks
+                    }}>
+                        {/* Horizontal Line 1 (after row 2) */}
+                        <div style={{
+                            position: 'absolute',
+                            top: '33.33%',
+                            left: 0,
+                            right: 0,
+                            height: '2px', // subtle line
+                            background: 'var(--accent-primary)',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                            zIndex: 20
+                        }} />
+                        {/* Horizontal Line 2 (after row 4) */}
+                        <div style={{
+                            position: 'absolute',
+                            top: '66.66%',
+                            left: 0,
+                            right: 0,
+                            height: '2px',
+                            background: 'var(--accent-primary)',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                            zIndex: 20
+                        }} />
+
+                        {/* Vertical Line (after col 3) */}
+                        <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            bottom: 0,
+                            left: '50%',
+                            width: '2px', // subtle line
+                            background: 'var(--accent-primary)',
+                            boxShadow: '1px 0 2px rgba(0,0,0,0.2)',
+                            zIndex: 20
+                        }} />
+                    </div>
+
                     {grid.map((row, rIndex) => (
                         row.map((cell, cIndex) => {
                             const isInitial = gameData.initial[rIndex][cIndex] !== 0;
                             const isSelected = selectedCell && selectedCell[0] === rIndex && selectedCell[1] === cIndex;
-
-                            // Enhanced border logic for 2x3 blocks with prominent lifted effect
-                            const isRightBlockBorder = (cIndex + 1) % 3 === 0 && cIndex !== 5;
-                            const isBottomBlockBorder = (rIndex + 1) % 2 === 0 && rIndex !== 5;
-
-                            const borderRight = isRightBlockBorder
-                                ? '5px solid var(--accent-primary)'
-                                : '1px solid var(--border-color)';
-                            const borderBottom = isBottomBlockBorder
-                                ? '5px solid var(--accent-primary)'
-                                : '1px solid var(--border-color)';
-
-                            // Strong lifted shadow for block boundaries
-                            let boxShadow = 'none';
-                            let zIndex = 1;
-
-                            if (isRightBlockBorder || isBottomBlockBorder) {
-                                boxShadow = `0 0 0 2px var(--bg-primary), 0 4px 8px rgba(0,0,0,0.5)`;
-                                zIndex = 2;
-                            }
 
                             return (
                                 <div
@@ -361,14 +391,11 @@ const SudokuGame = () => {
                                         fontWeight: isInitial ? 'normal' : 'bold',
                                         cursor: isInitial ? 'default' : 'pointer',
                                         borderRadius: '4px',
-                                        borderRight,
-                                        borderBottom,
-                                        boxShadow,
-                                        zIndex,
+                                        border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
                                         transition: 'all 0.2s ease',
-                                        border: isSelected ? '3px solid var(--accent-primary)' : '1px solid transparent',
                                         minHeight: isMobile ? '44px' : 'auto',
-                                        position: 'relative'
+                                        position: 'relative',
+                                        zIndex: isSelected ? 5 : 1
                                     }}
                                 >
                                     {cell !== 0 ? cell : ''}

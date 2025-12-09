@@ -90,7 +90,18 @@ const GravityGame = () => {
 
     // Game loop
     useEffect(() => {
-        if (!engineRef.current || !canvasRef.current || !hasStarted) return;
+        if (!hasStarted) {
+            console.log('GravityGame: Not started yet');
+            return;
+        }
+        if (!engineRef.current) {
+            console.error('GravityGame: Engine not initialized');
+            return;
+        }
+        if (!canvasRef.current) {
+            console.error('GravityGame: Canvas ref is null');
+            return;
+        }
 
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
@@ -100,13 +111,34 @@ const GravityGame = () => {
         const bgColor = getComputedStyle(document.documentElement)
             .getPropertyValue('--bg-primary').trim() || '#0f172a';
 
+        console.log('GravityGame: Starting render loop', { CANVAS_WIDTH, CANVAS_HEIGHT, bgColor });
+
         const render = () => {
+            if (!ctx) return;
+
             // Clear canvas with actual color
             ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
+            // Force redraw background if needed
+            if (canvas.style.backgroundColor !== bgColor) {
+                canvas.style.backgroundColor = bgColor;
+            }
+
+            // DEBUG: Draw a red square in the center to prove canvas is working
+            // ctx.fillStyle = 'red';
+            // ctx.fillRect(CANVAS_WIDTH/2 - 25, CANVAS_HEIGHT/2 - 25, 50, 50);
+
             // Draw all bodies
-            engine.getAllBodies().forEach(body => {
+            const bodies = engine.getAllBodies();
+            if (bodies.length === 0) {
+                // Draw text if no bodies
+                ctx.fillStyle = 'white';
+                ctx.font = '20px Arial';
+                ctx.fillText('No physics bodies found', 50, 50);
+            }
+
+            bodies.forEach(body => {
                 ctx.save();
                 ctx.translate(body.position.x, body.position.y);
                 ctx.rotate(body.angle);
