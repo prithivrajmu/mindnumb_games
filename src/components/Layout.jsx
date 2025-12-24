@@ -44,12 +44,44 @@ const Layout = ({ activeGameId, onGameSelect }) => {
                 display: 'flex',
                 flexDirection: 'column'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                    <img src="/logo.jpg" alt="Drift Logo" style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover' }} />
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>
+                <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '1rem', 
+                    marginBottom: '2rem',
+                    transition: 'transform 0.3s ease'
+                }}>
+                    <img 
+                        src="/logo.jpg" 
+                        alt="Drift Logo" 
+                        style={{ 
+                            width: '40px', 
+                            height: '40px', 
+                            borderRadius: '8px', 
+                            objectFit: 'cover',
+                            transition: 'transform 0.3s ease',
+                            cursor: 'pointer'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'rotate(5deg) scale(1.05)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'rotate(0deg) scale(1)'}
+                    />
+                    <h1 style={{ 
+                        fontSize: '1.5rem', 
+                        fontWeight: 'bold', 
+                        background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', 
+                        WebkitBackgroundClip: 'text', 
+                        WebkitTextFillColor: 'transparent', 
+                        margin: 0,
+                        transition: 'background-position 0.3s ease'
+                    }}>
                         Drift
                     </h1>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', opacity: 0.5 }}>v1.1</span>
+                    <span style={{ 
+                        fontSize: '0.7rem', 
+                        color: 'var(--text-secondary)', 
+                        opacity: 0.5,
+                        transition: 'opacity 0.3s ease'
+                    }}>v1.2</span>
                 </div>
 
                 <nav style={{ flex: 1 }}>
@@ -64,9 +96,10 @@ const Layout = ({ activeGameId, onGameSelect }) => {
                     </h3>
                     <ul style={{ listStyle: 'none' }}>
                         {games.map(game => (
-                            <li key={game.id} style={{ marginBottom: '0.5rem' }}>
+                            <li key={game.id} style={{ marginBottom: '0.5rem', position: 'relative' }}>
                                 <button
                                     onClick={() => onGameSelect(game.id)}
+                                    title={game.description}
                                     style={{
                                         width: '100%',
                                         textAlign: 'left',
@@ -76,14 +109,44 @@ const Layout = ({ activeGameId, onGameSelect }) => {
                                         color: activeGameId === game.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
                                         border: 'none',
                                         display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.75rem',
-                                        transition: 'all 0.2s',
-                                        fontWeight: activeGameId === game.id ? 'bold' : 'normal'
+                                        flexDirection: 'column',
+                                        alignItems: 'flex-start',
+                                        gap: '0.25rem',
+                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        fontWeight: activeGameId === game.id ? 'bold' : 'normal',
+                                        transform: activeGameId === game.id ? 'translateX(4px)' : 'translateX(0)',
+                                        boxShadow: activeGameId === game.id ? 'var(--shadow-md)' : 'none'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (activeGameId !== game.id) {
+                                            e.currentTarget.style.background = 'var(--bg-tertiary)';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (activeGameId !== game.id) {
+                                            e.currentTarget.style.background = 'transparent';
+                                        }
                                     }}
                                 >
-                                    <span>{game.icon}</span>
-                                    {game.name}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%' }}>
+                                        <span style={{ 
+                                            fontSize: '1.25rem',
+                                            transition: 'transform 0.3s ease',
+                                            transform: activeGameId === game.id ? 'scale(1.2)' : 'scale(1)'
+                                        }}>{game.icon}</span>
+                                        <span>{game.name}</span>
+                                    </div>
+                                    {activeGameId === game.id && (
+                                        <span style={{
+                                            fontSize: '0.75rem',
+                                            color: 'var(--text-secondary)',
+                                            opacity: 0.8,
+                                            marginLeft: '2rem',
+                                            animation: 'fadeIn 0.3s ease'
+                                        }}>
+                                            {game.description}
+                                        </span>
+                                    )}
                                 </button>
                             </li>
                         ))}
@@ -163,11 +226,13 @@ const Layout = ({ activeGameId, onGameSelect }) => {
 
             {/* Main Content */}
             <main style={{ flex: 1, padding: isMobile ? '1rem' : '2rem', overflowY: 'auto', background: 'var(--bg-primary)' }}>
-                <div className="game-container animate-fade-in">
+                <div className="game-container" key={activeGameId}>
                     {activeGame ? (
-                        <activeGame.component />
+                        <div className="game-wrapper animate-fade-in">
+                            <activeGame.component />
+                        </div>
                     ) : (
-                        <div className="glass-panel" style={{ padding: '4rem 2rem', textAlign: 'center' }}>
+                        <div className="glass-panel animate-fade-in" style={{ padding: '4rem 2rem', textAlign: 'center' }}>
                             <p style={{ color: 'var(--text-primary)' }}>Select a game to start playing</p>
                         </div>
                     )}
@@ -182,8 +247,15 @@ const Layout = ({ activeGameId, onGameSelect }) => {
                             key={game.id}
                             onClick={() => onGameSelect(game.id)}
                             className={activeGameId === game.id ? 'active' : ''}
+                            style={{
+                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                transform: activeGameId === game.id ? 'scale(1.05)' : 'scale(1)'
+                            }}
                         >
-                            <span className="icon">{game.icon}</span>
+                            <span className="icon" style={{
+                                transition: 'transform 0.3s ease',
+                                transform: activeGameId === game.id ? 'scale(1.2)' : 'scale(1)'
+                            }}>{game.icon}</span>
                             <span>{game.name}</span>
                         </button>
                     ))}

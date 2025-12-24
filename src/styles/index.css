@@ -297,6 +297,66 @@ button {
   }
 }
 
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes cardFlip {
+  from {
+    transform: rotateY(180deg);
+  }
+  to {
+    transform: rotateY(0deg);
+  }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out forwards;
+}
+
+.game-wrapper {
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.game-container {
+  position: relative;
+  min-height: 100%;
+}
+
+/* Memory Card Styles */
+.memory-card {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+.memory-card:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.memory-card:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+/* Smooth transitions for game switching */
+.game-wrapper {
+  will-change: opacity, transform;
 }

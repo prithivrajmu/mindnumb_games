@@ -51,9 +51,34 @@ body {
     background: transparent;
     color: var(--text-secondary);
     font-size: 0.75rem;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     min-height: 44px;
-    /* Touch target */
+    border-radius: var(--radius-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.mobile-bottom-nav button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: var(--cell-bg-selected);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.mobile-bottom-nav button.active::before {
+    width: 100%;
+    height: 100%;
+    opacity: 0.3;
+}
+
+.mobile-bottom-nav button:active {
+    transform: scale(0.95);
 }
 
 .mobile-bottom-nav button.active {
@@ -250,4 +275,57 @@ p {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* Memory card animations */
+@keyframes cardFlip {
+  0% {
+    transform: rotateY(180deg);
+  }
+  100% {
+    transform: rotateY(0deg);
+  }
+}
+
+.memory-card {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Improved button hover states */
+.btn-primary:active,
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better focus states for accessibility */
+button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Loading state animation */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.loading {
+  background: linear-gradient(
+    90deg,
+    var(--bg-secondary) 0%,
+    var(--bg-tertiary) 50%,
+    var(--bg-secondary) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
 }

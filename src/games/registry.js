@@ -1,6 +1,7 @@
 // Game Registry - Add new games here
 import SudokuGame from './sudoku/SudokuGame';
 import GravityGame from './gravity/GravityGame';
+import MemoryGame from './memory/MemoryGame';
 
 const GAMES = [
     {
@@ -16,6 +17,13 @@ const GAMES = [
         icon: '🎯',
         description: 'Physics-based puzzle game',
         component: GravityGame
+    },
+    {
+        id: 'memory',
+        name: 'Memory Match',
+        icon: '🧠',
+        description: 'Match pairs of cards',
+        component: MemoryGame
     }
 ];
 
