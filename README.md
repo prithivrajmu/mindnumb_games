@@ -1,16 +1,23 @@
-# React + Vite
+# Mind Numb Games (Drift)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Small browser games for short focus breaks: Mini Sudoku and Gravity Drop.
+React + Vite. Scores, best score, name and theme are kept in localStorage.
 
-Currently, two official plugins are available:
+## Develop and build
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+    npm install
+    npm run dev      # local dev server
+    npm run build    # static site in dist/
 
-## React Compiler
+`dist/` is fully static with relative asset URLs (`base: './'`) and hash routing
+(`#sudoku`, `#gravity`), so it can be served from any subpath such as
+`games.prithivraj.xyz/mindnumb/`. Serve it with a trailing slash (`/mindnumb/`).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Next steps
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Deploy `dist/` to games.prithivraj.xyz/mindnumb/ via Vercel (build: `npm run build`,
+  output: `dist`; redirect `/mindnumb` to `/mindnumb/`, relative assets need the slash).
+- Add a visible pause button; add sound with a mute toggle.
+- Gravity Drop: more levels, and drop from a fixed height so clicking inside the goal is not a free win.
+- Sudoku: arrow-key navigation, pencil notes, daily seeded puzzle.
+- Add automated tests for the sudoku generator and the score calculations.

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { PhysicsEngine } from './physicsEngine';
 import { LEVELS, getLevel } from './levels';
-import { storage } from '../../services/storage';
+import { storage, getPlayerName } from '../../services/storage';
 import Leaderboard from '../../components/Leaderboard';
 
 const GravityGame = () => {
@@ -19,7 +19,8 @@ const GravityGame = () => {
     const [isActive, setIsActive] = useState(false);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-    const [goalBody, setGoalBody] = useState(null);
+    const [attempt, setAttempt] = useState(0); // bump to rebuild the physics world (Reset/Replay)
+    const [best, setBest] = useState(null);
 
     const CANVAS_WIDTH = 800;
     const CANVAS_HEIGHT = 600;
@@ -44,7 +45,8 @@ const GravityGame = () => {
 
     // Initialize physics engine
     useEffect(() => {
-        if (!levelData || !canvasRef.current) return;
+        // The canvas only exists once the level has started
+        if (!levelData || !hasStarted || !canvasRef.current) return;
 
         const engine = new PhysicsEngine(CANVAS_WIDTH, CANVAS_HEIGHT, levelData.gravity);
         engineRef.current = engine;
@@ -55,17 +57,17 @@ const GravityGame = () => {
         });
 
         // Create goal zone (sensor)
-        const goal = engine.addBody({
+        engine.addBody({
             type: 'rectangle',
             x: levelData.goal.x,
             y: levelData.goal.y,
             width: levelData.goal.width,
             height: levelData.goal.height,
             isStatic: true,
+            isSensor: true, // objects must pass through the goal, not land on it
             color: levelData.goal.color,
             label: 'goal'
         });
-        setGoalBody(goal);
 
         return () => {
             if (animationRef.current) {
@@ -75,14 +77,14 @@ const GravityGame = () => {
                 engineRef.current.reset();
             }
         };
-    }, [levelData]);
+    }, [levelData, hasStarted, attempt]);
 
     // Timer
     useEffect(() => {
         let interval = null;
         if (isActive && !isWon && hasStarted) {
             interval = setInterval(() => {
-                setTimer(t => t + 1);
+                if (!document.hidden) setTimer(t => t + 1); // pause while tab is hidden
             }, 1000);
         }
         return () => clearInterval(interval);
@@ -90,18 +92,7 @@ const GravityGame = () => {
 
     // Game loop
     useEffect(() => {
-        if (!hasStarted) {
-            console.log('GravityGame: Not started yet');
-            return;
-        }
-        if (!engineRef.current) {
-            console.error('GravityGame: Engine not initialized');
-            return;
-        }
-        if (!canvasRef.current) {
-            console.error('GravityGame: Canvas ref is null');
-            return;
-        }
+        if (!hasStarted || !engineRef.current || !canvasRef.current) return;
 
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
@@ -111,34 +102,19 @@ const GravityGame = () => {
         const bgColor = getComputedStyle(document.documentElement)
             .getPropertyValue('--bg-primary').trim() || '#0f172a';
 
-        console.log('GravityGame: Starting render loop', { CANVAS_WIDTH, CANVAS_HEIGHT, bgColor });
+        const STEP = 1000 / 60;
+        let last = performance.now();
+        let acc = 0;
 
-        const render = () => {
+        const render = (now = performance.now()) => {
             if (!ctx) return;
 
             // Clear canvas with actual color
             ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-            // Force redraw background if needed
-            if (canvas.style.backgroundColor !== bgColor) {
-                canvas.style.backgroundColor = bgColor;
-            }
-
-            // DEBUG: Draw a red square in the center to prove canvas is working
-            // ctx.fillStyle = 'red';
-            // ctx.fillRect(CANVAS_WIDTH/2 - 25, CANVAS_HEIGHT/2 - 25, 50, 50);
-
             // Draw all bodies
-            const bodies = engine.getAllBodies();
-            if (bodies.length === 0) {
-                // Draw text if no bodies
-                ctx.fillStyle = 'white';
-                ctx.font = '20px Arial';
-                ctx.fillText('No physics bodies found', 50, 50);
-            }
-
-            bodies.forEach(body => {
+            engine.getAllBodies().forEach(body => {
                 ctx.save();
                 ctx.translate(body.position.x, body.position.y);
                 ctx.rotate(body.angle);
@@ -185,11 +161,16 @@ const GravityGame = () => {
                 ctx.restore();
             });
 
-            // Step physics
-            engine.step();
+            // Step physics at a fixed 60Hz regardless of display refresh rate
+            acc = Math.min(acc + (now - last), 100);
+            last = now;
+            while (acc >= STEP) {
+                engine.step(STEP);
+                acc -= STEP;
+            }
 
             // Check win condition
-            if (!isWon && goalBody) {
+            if (!isWon) {
                 const dynamicBodies = engine.getDynamicBodies();
                 const bodyInGoal = dynamicBodies.some(body => {
                     return engine.isInBounds(body, {
@@ -215,15 +196,15 @@ const GravityGame = () => {
                 cancelAnimationFrame(animationRef.current);
             }
         };
-    }, [hasStarted, isWon, goalBody, levelData]);
+    }, [hasStarted, isWon, levelData, attempt]);
 
     const handleCanvasClick = (e) => {
         if (!hasStarted || isWon || !engineRef.current || !levelData) return;
-        if (dropsUsed >= levelData.par) return;
 
+        // Canvas is scaled down by CSS on small screens: convert to canvas coordinates
         const rect = canvasRef.current.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const x = (e.clientX - rect.left) * (CANVAS_WIDTH / rect.width);
+        const y = (e.clientY - rect.top) * (CANVAS_HEIGHT / rect.height);
 
         // Drop object at click position
         const objType = levelData.availableObjects[dropsUsed % levelData.availableObjects.length];
@@ -238,47 +219,46 @@ const GravityGame = () => {
         if (!isActive) setIsActive(true);
     };
 
-    const handleWin = async () => {
+    const handleWin = () => {
         setIsWon(true);
         setIsActive(false);
+    };
 
-        confetti({
-            particleCount: 100,
-            spread: 60,
-            origin: { y: 0.6 }
-        });
-
-        // Calculate score
-        const parBonus = dropsUsed <= levelData.par ? 300 : 0;
-        const timeBonus = Math.max(0, 100 - timer);
-        const score = 1000 + parBonus + timeBonus - (dropsUsed * 50);
-
-        let playerName = localStorage.getItem('mng_player_name') || 'Anonymous';
-
-        await storage.saveScore('gravity', {
-            name: playerName,
+    // Score is saved once, from the committed state at the moment of winning
+    // (the render loop's closure would otherwise see stale drops/timer).
+    const score = 1000 + (dropsUsed <= (levelData?.par ?? 0) ? 300 : 0) + Math.max(0, 100 - timer) - dropsUsed * 50;
+    useEffect(() => {
+        if (!isWon) return;
+        confetti({ particleCount: 100, spread: 60, origin: { y: 0.6 } });
+        storage.saveScore('gravity', {
+            name: getPlayerName(),
             date: new Date().toISOString(),
             score,
             level: currentLevel,
             drops: dropsUsed,
             time: timer
         });
-    };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isWon]);
+
+    useEffect(() => {
+        storage.getBest('gravity').then(setBest);
+    }, [isWon]);
 
     const startGame = () => {
         setHasStarted(true);
     };
 
     const nextLevel = () => {
-        if (currentLevel < LEVELS.length) {
-            setCurrentLevel(c => c + 1);
-        } else {
-            setCurrentLevel(1);
-        }
+        setCurrentLevel(c => (c < LEVELS.length ? c + 1 : 1));
     };
 
     const resetLevel = () => {
-        setCurrentLevel(c => c); // Triggers re-render
+        setDropsUsed(0);
+        setIsWon(false);
+        setIsActive(false);
+        setTimer(0);
+        setAttempt(a => a + 1);
     };
 
     const formatTime = (seconds) => {
@@ -321,6 +301,9 @@ const GravityGame = () => {
                     <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
                         Drop objects to reach the green goal zone. Par: {levelData.par} drops
                     </p>
+                    {best !== null && (
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Best score: {best}</p>
+                    )}
                     <button
                         className="btn-primary"
                         onClick={startGame}
@@ -379,7 +362,8 @@ const GravityGame = () => {
                     style={{
                         border: '2px solid var(--border-color)',
                         borderRadius: '8px',
-                        cursor: dropsUsed < levelData.par && !isWon ? 'crosshair' : 'default',
+                        cursor: isWon ? 'default' : 'crosshair',
+                        touchAction: 'manipulation',
                         maxWidth: '100%',
                         height: 'auto',
                         background: 'var(--bg-primary)'
@@ -416,6 +400,9 @@ const GravityGame = () => {
                     background: 'var(--glass-bg)'
                 }}>
                     <h2 style={{ color: 'var(--success)', marginBottom: '1rem' }}>Level Complete!</h2>
+                    <p style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+                        Score: {score}
+                    </p>
                     <p style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
                         Drops: {dropsUsed} {dropsUsed <= levelData.par ? '⭐' : ''}
                     </p>

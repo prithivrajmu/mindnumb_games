@@ -68,36 +68,49 @@ const solveBoard = (board) => {
     return true;
 };
 
+// Count solutions (stops at `limit`) so puzzles can be kept uniquely solvable
+const countSolutions = (board, limit = 2) => {
+    for (let row = 0; row < GRID_SIZE; row++) {
+        for (let col = 0; col < GRID_SIZE; col++) {
+            if (board[row][col] !== EMPTY) continue;
+            let n = 0;
+            for (let num = 1; num <= GRID_SIZE && n < limit; num++) {
+                if (isValid(board, row, col, num)) {
+                    board[row][col] = num;
+                    n += countSolutions(board, limit - n);
+                    board[row][col] = EMPTY;
+                }
+            }
+            return n;
+        }
+    }
+    return 1;
+};
+
 // Generate a new game
-export const generateGame = (difficulty = DIFFICULTY.EASY, seed = null) => {
-    // If seed is provided, use it to seed Math.random (simplified for now)
-    // For a real app, we'd use a seeded RNG library. 
-    // Here we'll just use the current time if no seed, or a simple hash if seed.
-
-    // 1. Create empty board
+export const generateGame = (difficulty = DIFFICULTY.EASY) => {
+    // 1. Solve an empty board with the randomized solver
     const fullBoard = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(EMPTY));
-
-    // 2. Fill diagonal boxes (independent) to ensure randomness
-    // For 6x6 (2x3 boxes), boxes at (0,0), (2,2) are not independent like 9x9.
-    // So we just rely on the randomized solver.
-
-    // 3. Solve to get a complete valid board
     solveBoard(fullBoard);
 
-    // 4. Remove numbers to create puzzle
+    // 2. Remove cells in random order, keeping the solution unique
+    // (otherwise a valid but "different" fill would be rejected as wrong).
+    // Very hard targets may keep a few extra clues if uniqueness would break.
     const puzzle = fullBoard.map(row => [...row]);
-    let attempts = GRID_SIZE * GRID_SIZE - difficulty;
+    const cells = [];
+    for (let r = 0; r < GRID_SIZE; r++) for (let c = 0; c < GRID_SIZE; c++) cells.push([r, c]);
+    for (let i = cells.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cells[i], cells[j]] = [cells[j], cells[i]];
+    }
 
-    while (attempts > 0) {
-        const row = Math.floor(Math.random() * GRID_SIZE);
-        const col = Math.floor(Math.random() * GRID_SIZE);
-
-        if (puzzle[row][col] !== EMPTY) {
-            puzzle[row][col] = EMPTY;
-            attempts--;
-            // Ideally we should check if unique solution exists here, 
-            // but for 6x6 and this scope, we skip for performance/simplicity.
-        }
+    let clues = GRID_SIZE * GRID_SIZE;
+    for (const [r, c] of cells) {
+        if (clues <= difficulty) break;
+        const keep = puzzle[r][c];
+        puzzle[r][c] = EMPTY;
+        if (countSolutions(puzzle.map(row => [...row])) === 1) clues--;
+        else puzzle[r][c] = keep;
     }
 
     return {

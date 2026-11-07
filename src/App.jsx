@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from './components/Layout';
-import { getAllGames } from './games/registry';
+import { getGame } from './games/registry';
+
+// Hash routing (#sudoku) works from any subpath on a static host; no hash = home page
+const idFromHash = () => {
+  const id = window.location.hash.slice(1);
+  return getGame(id) ? id : null;
+};
 
 function App() {
-  const games = getAllGames();
-  // Default to the first available game
-  const [activeGameId, setActiveGameId] = useState(games[0]?.id || 'sudoku');
+  const [activeGameId, setActiveGameId] = useState(idFromHash);
+
+  useEffect(() => {
+    const onHash = () => setActiveGameId(idFromHash());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
 
   return (
     <Layout
       activeGameId={activeGameId}
-      onGameSelect={setActiveGameId}
+      onGameSelect={(id) => { window.location.hash = id || ''; }}
     />
   );
 }
