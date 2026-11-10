@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import { generateGame, checkSolution, DIFFICULTY, getHint } from './sudokuLogic';
-import { storage } from '../../services/storage';
+import { storage, getPlayerName } from '../../services/storage';
 import Leaderboard from '../../components/Leaderboard';
 
 const SudokuGame = () => {
@@ -20,6 +20,11 @@ const SudokuGame = () => {
     const [hintsUsed, setHintsUsed] = useState(0);
     const MAX_HINTS = 3;
     const [hasStarted, setHasStarted] = useState(false);
+    const [best, setBest] = useState(null);
+    const diffName = difficulty === DIFFICULTY.EASY ? 'Easy' : difficulty === DIFFICULTY.MEDIUM ? 'Medium' : 'Hard';
+    const score = Math.max(0, 1000 - timer * 2 - mistakes * 50
+        + (difficulty === DIFFICULTY.HARD ? 500 : difficulty === DIFFICULTY.MEDIUM ? 200 : 0)
+        - hintsUsed * 100);
 
     useEffect(() => {
         const handleResize = () => {
@@ -54,7 +59,7 @@ const SudokuGame = () => {
         let interval = null;
         if (isActive && !isComplete && hasStarted) {
             interval = setInterval(() => {
-                setTimer(t => t + 1);
+                if (!document.hidden) setTimer(t => t + 1); // pause while tab is hidden
             }, 1000);
         }
         return () => clearInterval(interval);
@@ -79,68 +84,43 @@ const SudokuGame = () => {
 
         const newGrid = grid.map(row => [...row]);
         newGrid[r][c] = num;
-        setGrid(newGrid);
+        commit(newGrid);
 
         if (isMobile && num !== 0) {
             setShowNumberPad(false);
         }
+    };
 
-        let isFull = true;
-        for (let i = 0; i < 6; i++) {
-            for (let j = 0; j < 6; j++) {
-                if (newGrid[i][j] === 0) {
-                    isFull = false;
-                    break;
-                }
-            }
-        }
-
-        if (isFull) {
-            if (checkSolution(newGrid, gameData.solution)) {
-                handleWin();
-            } else {
-                setMistakes(m => m + 1);
-            }
+    // Apply a new grid and detect completion (used by typing and by hints)
+    const commit = (newGrid) => {
+        setGrid(newGrid);
+        if (newGrid.some(row => row.includes(0))) return;
+        if (checkSolution(newGrid, gameData.solution)) {
+            setIsComplete(true);
+            setIsActive(false);
+        } else {
+            setMistakes(m => m + 1);
         }
     };
 
-    const handleWin = async () => {
-        setIsComplete(true);
-        setIsActive(false);
-
-        confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 }
-        });
-
-        // Prompt for player name
-        let playerName = localStorage.getItem('mng_player_name');
-        if (!playerName) {
-            playerName = prompt('🎉 Congratulations! Enter your name for the leaderboard:', '');
-            if (playerName && playerName.trim()) {
-                playerName = playerName.trim().substring(0, 20); // Limit to 20 chars
-                localStorage.setItem('mng_player_name', playerName);
-            } else {
-                playerName = 'Anonymous';
-            }
-        }
-
-        // Calculate score with hint penalty
-        const baseScore = 1000 - (timer * 2) - (mistakes * 50);
-        const difficultyBonus = difficulty === DIFFICULTY.HARD ? 500 : difficulty === DIFFICULTY.MEDIUM ? 200 : 0;
-        const hintPenalty = hintsUsed * 100; // 100 points per hint
-        const score = Math.max(0, baseScore + difficultyBonus - hintPenalty);
-
-        await storage.saveScore('sudoku', {
-            name: playerName,
+    // Runs once on completion, after hint/mistake/timer state has committed
+    useEffect(() => {
+        if (!isComplete) return;
+        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        storage.saveScore('sudoku', {
+            name: getPlayerName(),
             date: new Date().toISOString(),
             score,
-            difficulty: difficulty === DIFFICULTY.EASY ? 'Easy' : difficulty === DIFFICULTY.MEDIUM ? 'Medium' : 'Hard',
+            difficulty: diffName,
             time: timer,
             hintsUsed
         });
-    };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isComplete]);
+
+    useEffect(() => {
+        storage.getBest('sudoku').then(setBest);
+    }, [isComplete]);
 
     const handleUndo = () => {
         if (history.length === 0 || isComplete) return;
@@ -172,7 +152,7 @@ const SudokuGame = () => {
 
             const newGrid = grid.map(row => [...row]);
             newGrid[hint.row][hint.col] = hint.value;
-            setGrid(newGrid);
+            commit(newGrid);
 
             setSelectedCell([hint.row, hint.col]);
             setHintsUsed(prev => prev + 1);
@@ -221,7 +201,7 @@ const SudokuGame = () => {
                         <div>
                             <div style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Difficulty</div>
                             <div style={{ fontWeight: 'bold', color: 'var(--text-primary)', fontSize: isMobile ? '0.875rem' : '1rem' }}>
-                                {difficulty === DIFFICULTY.EASY ? 'Easy' : difficulty === DIFFICULTY.MEDIUM ? 'Medium' : 'Hard'}
+                                {diffName}
                             </div>
                         </div>
                         <div>
@@ -257,9 +237,20 @@ const SudokuGame = () => {
                         <h2 style={{ fontSize: isMobile ? '1.5rem' : '2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>
                             Mini Sudoku
                         </h2>
-                        <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-                            {difficulty === DIFFICULTY.EASY ? 'Easy' : difficulty === DIFFICULTY.MEDIUM ? 'Medium' : 'Hard'} Mode
-                        </p>
+                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1rem' }}>
+                            {Object.entries(DIFFICULTY).map(([name, value]) => (
+                                <button
+                                    key={name}
+                                    className={value === difficulty ? 'btn-primary' : 'btn-secondary'}
+                                    onClick={() => { setDifficulty(value); startNewGame(value); }}
+                                >
+                                    {name[0] + name.slice(1).toLowerCase()}
+                                </button>
+                            ))}
+                        </div>
+                        {best !== null && (
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Best score: {best}</p>
+                        )}
                         <button
                             className="btn-primary"
                             onClick={() => setHasStarted(true)}
@@ -296,7 +287,7 @@ const SudokuGame = () => {
                         <div>
                             <div style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Difficulty</div>
                             <div style={{ fontWeight: 'bold', color: 'var(--text-primary)', fontSize: isMobile ? '0.875rem' : '1rem' }}>
-                                {difficulty === DIFFICULTY.EASY ? 'Easy' : difficulty === DIFFICULTY.MEDIUM ? 'Medium' : 'Hard'}
+                                {diffName}
                             </div>
                         </div>
                         <div>
@@ -386,7 +377,7 @@ const SudokuGame = () => {
                                     className="flex-center"
                                     style={{
                                         background: isSelected ? 'var(--cell-bg-selected)' : isInitial ? 'var(--cell-bg-initial)' : 'transparent',
-                                        color: isInitial ? 'var(--text-secondary)' : 'var(--accent-primary)',
+                                        color: isInitial ? 'var(--text-secondary)' : (cell !== 0 && cell !== gameData.solution[rIndex][cIndex]) ? 'var(--error)' : 'var(--accent-primary)',
                                         fontSize: isMobile ? '1.25rem' : '1.5rem',
                                         fontWeight: isInitial ? 'normal' : 'bold',
                                         cursor: isInitial ? 'default' : 'pointer',
@@ -461,7 +452,7 @@ const SudokuGame = () => {
                         background: 'var(--glass-bg)'
                     }}>
                         <h2 style={{ color: 'var(--success)', marginBottom: '1rem' }}>Level Complete!</h2>
-                        <p style={{ marginBottom: '2rem', color: 'var(--text-primary)' }}>Score: {Math.max(0, 1000 - (timer * 2) - (mistakes * 50) + (difficulty === DIFFICULTY.HARD ? 500 : difficulty === DIFFICULTY.MEDIUM ? 200 : 0))}</p>
+                        <p style={{ marginBottom: '2rem', color: 'var(--text-primary)' }}>Score: {score}</p>
 
                         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                             <button
@@ -478,7 +469,7 @@ const SudokuGame = () => {
                                     startNewGame(nextDiff);
                                 }}
                             >
-                                Next Level
+                                {difficulty === DIFFICULTY.HARD ? 'New Game' : 'Next Level'}
                             </button>
                         </div>
                     </div>

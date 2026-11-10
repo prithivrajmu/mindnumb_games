@@ -60,6 +60,12 @@ class StorageService {
     return top10;
   }
 
+  // Highest score ever saved for a game, or null
+  async getBest(gameId) {
+    const scores = await this.getLeaderboard(gameId);
+    return scores.length ? scores[0].score : null;
+  }
+
   // Progress/Save State Methods
   async saveProgress(gameId, state) {
     const allProgress = this._getLocal(STORAGE_KEYS.PROGRESS, {});
@@ -77,3 +83,17 @@ class StorageService {
 }
 
 export const storage = new StorageService();
+
+// Player name used on the leaderboard; asked once, then remembered.
+export const getPlayerName = () => {
+  try {
+    let name = localStorage.getItem('mng_player_name');
+    if (!name) {
+      name = (prompt('🎉 Enter your name for the leaderboard:', '') || '').trim().substring(0, 20);
+      if (name) localStorage.setItem('mng_player_name', name);
+    }
+    return name || 'Anonymous';
+  } catch {
+    return 'Anonymous';
+  }
+};

@@ -32,6 +32,7 @@ export class PhysicsEngine {
                     restitution: config.restitution || 0.6,
                     friction: config.friction || 0.01,
                     isStatic: config.isStatic || false,
+                    isSensor: config.isSensor || false,
                     label: config.label || 'circle'
                 }
             );
@@ -45,6 +46,7 @@ export class PhysicsEngine {
                     restitution: config.restitution || 0.3,
                     friction: config.friction || 0.1,
                     isStatic: config.isStatic || false,
+                    isSensor: config.isSensor || false,
                     angle: config.angle || 0,
                     label: config.label || 'rectangle'
                 }

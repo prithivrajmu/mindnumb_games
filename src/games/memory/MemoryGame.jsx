@@ -139,7 +139,7 @@ const MemoryGame = () => {
         }
     };
 
-    const handleWin = async () => {
+    async function handleWin() {
         setIsComplete(true);
         setIsActive(false);
 

@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getAllGames } from '../games/registry';
+import Home from './Home';
+
+const LOGO = `${import.meta.env.BASE_URL}logo.jpg`;
 
 const THEMES = [
     { id: 'midnight', name: '🌙 Midnight', emoji: '🌙' },
@@ -11,6 +14,8 @@ const THEMES = [
     { id: 'monokai', name: '💻 Monokai', emoji: '💻' },
     { id: 'paper', name: '📝 Paper', emoji: '📝' }
 ];
+
+const HOME = { id: '', name: 'Home', icon: '🏠' };
 
 const Layout = ({ activeGameId, onGameSelect }) => {
     const games = getAllGames();
@@ -52,7 +57,7 @@ const Layout = ({ activeGameId, onGameSelect }) => {
                     transition: 'transform 0.3s ease'
                 }}>
                     <img 
-                        src="/logo.jpg" 
+                        src={LOGO} 
                         alt="Drift Logo" 
                         style={{ 
                             width: '40px', 
@@ -95,7 +100,7 @@ const Layout = ({ activeGameId, onGameSelect }) => {
                         Games
                     </h3>
                     <ul style={{ listStyle: 'none' }}>
-                        {games.map(game => (
+                        {[HOME, ...games].map(game => (
                             <li key={game.id} style={{ marginBottom: '0.5rem', position: 'relative' }}>
                                 <button
                                     onClick={() => onGameSelect(game.id)}
@@ -105,17 +110,17 @@ const Layout = ({ activeGameId, onGameSelect }) => {
                                         textAlign: 'left',
                                         padding: '0.75rem 1rem',
                                         borderRadius: '0.5rem',
-                                        background: activeGameId === game.id ? 'var(--cell-bg-selected)' : 'transparent',
-                                        color: activeGameId === game.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                                        background: (activeGameId || '') === game.id ? 'var(--cell-bg-selected)' : 'transparent',
+                                        color: (activeGameId || '') === game.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
                                         border: 'none',
                                         display: 'flex',
                                         flexDirection: 'column',
                                         alignItems: 'flex-start',
                                         gap: '0.25rem',
                                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                        fontWeight: activeGameId === game.id ? 'bold' : 'normal',
-                                        transform: activeGameId === game.id ? 'translateX(4px)' : 'translateX(0)',
-                                        boxShadow: activeGameId === game.id ? 'var(--shadow-md)' : 'none'
+                                        fontWeight: (activeGameId || '') === game.id ? 'bold' : 'normal',
+                                        transform: (activeGameId || '') === game.id ? 'translateX(4px)' : 'translateX(0)',
+                                        boxShadow: (activeGameId || '') === game.id ? 'var(--shadow-md)' : 'none'
                                     }}
                                     onMouseEnter={(e) => {
                                         if (activeGameId !== game.id) {
@@ -189,7 +194,7 @@ const Layout = ({ activeGameId, onGameSelect }) => {
             {isMobile && (
                 <div className="mobile-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <img src="/logo.jpg" alt="Drift Logo" style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover' }} />
+                        <img src={LOGO} alt="Drift Logo" style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover' }} />
                         <h1 style={{
                             fontSize: '1.25rem',
                             fontWeight: 'bold',
@@ -232,9 +237,7 @@ const Layout = ({ activeGameId, onGameSelect }) => {
                             <activeGame.component />
                         </div>
                     ) : (
-                        <div className="glass-panel animate-fade-in" style={{ padding: '4rem 2rem', textAlign: 'center' }}>
-                            <p style={{ color: 'var(--text-primary)' }}>Select a game to start playing</p>
-                        </div>
+                        <Home />
                     )}
                 </div>
             </main>
@@ -242,14 +245,14 @@ const Layout = ({ activeGameId, onGameSelect }) => {
             {/* Mobile Bottom Navigation */}
             {isMobile && (
                 <nav className="mobile-bottom-nav">
-                    {games.map(game => (
+                    {[HOME, ...games].map(game => (
                         <button
                             key={game.id}
                             onClick={() => onGameSelect(game.id)}
-                            className={activeGameId === game.id ? 'active' : ''}
+                            className={(activeGameId || '') === game.id ? 'active' : ''}
                             style={{
                                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                transform: activeGameId === game.id ? 'scale(1.05)' : 'scale(1)'
+                                transform: (activeGameId || '') === game.id ? 'scale(1.05)' : 'scale(1)'
                             }}
                         >
                             <span className="icon" style={{
